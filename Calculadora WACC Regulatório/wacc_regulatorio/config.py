@@ -15,8 +15,20 @@ from pathlib import Path
 # Diretórios
 BASE_DIR = Path(__file__).parent
 FIXTURES_DIR = BASE_DIR / "data" / "fixtures"
-CACHE_DIR = BASE_DIR / "data" / "cache"
-CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
+def _resolve_cache_dir() -> Path:
+    _default = BASE_DIR / "data" / "cache"
+    try:
+        _default.mkdir(parents=True, exist_ok=True)
+        (_default / ".write_test").touch()
+        (_default / ".write_test").unlink()
+        return _default
+    except OSError:
+        _fallback = Path.home() / ".wacc_cache"
+        _fallback.mkdir(parents=True, exist_ok=True)
+        return _fallback
+
+CACHE_DIR = _resolve_cache_dir()
 
 # Parâmetros regulatórios fixos
 T_IRPJ_CSLL = 0.34       # Alíquota composita IRPJ + CSLL
