@@ -1,0 +1,678 @@
+% beamerthemeamclean.sty
+% Tema Beamer Alvarez & Marsal — derivado do template oficial
+% "Template Alvarez And Marsal.potx" (master global A&M, 16:9).
+% Requer XeLaTeX ou LuaLaTeX (fontspec + Arial Nova).
+%
+% Geometria de referência: slide PPT 33.87 x 19.05 cm -> beamer 160 x 90 mm
+% (fator 0.4724 aplicado a todas as posições e corpos de texto).
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{beamerthemeamclean}[2026/06/10 v1.5 A&M Clean Beamer theme]
+
+\mode<presentation>
+
+% -------------------------------------------------%
+% Pacotes
+% -------------------------------------------------%
+\RequirePackage{fontspec}
+\RequirePackage{tikz}
+\RequirePackage{xcolor}
+\RequirePackage{etoolbox}
+\RequirePackage{kvoptions}
+\RequirePackage[skins]{tcolorbox}
+\usetikzlibrary{calc}
+
+% -------------------------------------------------%
+% Opções do tema
+% -------------------------------------------------%
+\SetupKeyvalOptions{family=amclean,prefix=amclean@}
+\DeclareStringOption[.]{assets}[.]
+\ProcessKeyvalOptions*
+
+\newcommand{\am@assets}{\amclean@assets}
+
+% Inclui imagem cobrindo a área WxH sem distorcer (excedente é clipado pelo caller)
+\newcommand{\am@fitimg}[3]{%
+  \setbox\@tempboxa=\hbox{\includegraphics[height=#3]{#1}}%
+  \ifdim\wd\@tempboxa<#2
+    \includegraphics[width=#2]{#1}%
+  \else
+    \box\@tempboxa
+  \fi}
+
+% -------------------------------------------------%
+% Cores oficiais A&M (DESIGN.md / potx)
+% -------------------------------------------------%
+\definecolor{amNavy}{HTML}{002B49}      % Midnight Marine - primária
+\definecolor{amSlate}{HTML}{5E8AB4}     % Slate Blue - secundária
+\definecolor{amSignal}{HTML}{0085CA}    % Signal Blue - destaque digital
+\definecolor{amSlateLight}{HTML}{9EB9D2}% Slate claro (eyebrow em slide dark)
+\definecolor{amGray}{HTML}{646464}      % Graphite - corpo de apoio
+\definecolor{amGrayMid}{HTML}{969696}
+\definecolor{amGrayFoot}{HTML}{7F7F7F}  % rodapé / fonte das informações
+\definecolor{amMist}{HTML}{D9D9D9}      % superfícies suaves / divisores
+\definecolor{amBackNavy}{HTML}{091B34}  % fundo da contracapa
+% Acentos (usar no máximo UM por apresentação)
+\definecolor{amTeal}{HTML}{00677F}
+\definecolor{amOrange}{HTML}{CF7F00}
+\definecolor{amMagenta}{HTML}{C8187D}
+\definecolor{amPurple}{HTML}{722282}
+\definecolor{amOlive}{HTML}{789904}
+\definecolor{amRed}{HTML}{A6192E}
+\definecolor{amYellow}{HTML}{F9C20A}
+\definecolor{amGreen}{HTML}{29702A}
+% Cores de gráficos (exemplos oficiais de Charts do Template.pptx)
+\definecolor{amGold}{HTML}{CE8E00}
+\definecolor{amMint}{HTML}{50D8B4}
+\definecolor{amGreenDark}{HTML}{02624B}
+\definecolor{amOrangeVivid}{HTML}{FF6D00}
+\definecolor{amMagentaSoft}{HTML}{B744B8}
+\definecolor{amRedVivid}{HTML}{BC0404}
+\definecolor{amTableStripe}{HTML}{DCE6F1}
+
+% -------------------------------------------------%
+% Fontes — Arial Nova (oficial da marca)
+% -------------------------------------------------%
+% Padrão da casa: Arial Nova Light para todo o texto;
+% bold (ênfase) usa Arial Nova Bold; textos pequenos usam Cond Light.
+\setsansfont{ArialNova-Light}[
+  Path            = \am@assets/fonts/,
+  Extension       = .ttf,
+  Ligatures       = TeX,
+  BoldFont        = ArialNova-Bold,
+  ItalicFont      = ArialNova-LightItalic,
+  BoldItalicFont  = ArialNova-BoldItalic,
+]
+\newfontfamily\amlightfont{ArialNova-Light}[
+  Path=\am@assets/fonts/, Extension=.ttf, Ligatures=TeX,
+  BoldFont=ArialNova, ItalicFont=ArialNova-LightItalic]
+\newfontfamily\amcondfont{ArialNovaCond}[
+  Path=\am@assets/fonts/, Extension=.ttf, Ligatures=TeX,
+  BoldFont=ArialNovaCond-Bold, ItalicFont=ArialNovaCond-Italic]
+\newfontfamily\amcondlightfont{ArialNovaCond-Light}[
+  Path=\am@assets/fonts/, Extension=.ttf, Ligatures=TeX,
+  BoldFont=ArialNovaCond, ItalicFont=ArialNovaCond-LightItalic]
+% Variantes sem hifenização (títulos de capa/separador e rótulos de componentes)
+\newfontfamily\amlightnhfont{ArialNova-Light}[
+  Path=\am@assets/fonts/, Extension=.ttf, Ligatures=TeX, HyphenChar=None,
+  BoldFont=ArialNova-Bold]
+\newfontfamily\amcondnhfont{ArialNovaCond}[
+  Path=\am@assets/fonts/, Extension=.ttf, Ligatures=TeX, HyphenChar=None,
+  BoldFont=ArialNovaCond-Bold]
+\newfontfamily\amcondlightnhfont{ArialNovaCond-Light}[
+  Path=\am@assets/fonts/, Extension=.ttf, Ligatures=TeX, HyphenChar=None,
+  BoldFont=ArialNovaCond]
+\renewcommand{\familydefault}{\sfdefault}
+
+% -------------------------------------------------%
+% Modo claro / escuro por frame
+% -------------------------------------------------%
+\newif\ifamdark
+\amdarkfalse
+
+\newcommand{\am@fg}{\ifamdark white\else amNavy\fi}
+\newcommand{\am@eyebrowcolor}{\ifamdark amSlateLight\else amSlate\fi}
+\newcommand{\am@logo}{\ifamdark \am@assets/logos/am-wordmark-white.png\else \am@assets/logos/am-wordmark-navy.png\fi}
+
+% Ambiente para sequência de frames escuros: \begin{amdark} <frames> \end{amdark}
+\newenvironment{amdark}{%
+  \amdarktrue
+  \setbeamercolor{background canvas}{bg=amNavy}%
+  \setbeamercolor{normal text}{fg=white}%
+  \setbeamercolor{itemize item}{fg=amSlateLight}%
+  \setbeamercolor{itemize subitem}{fg=amSlateLight}%
+  \setbeamercolor{enumerate item}{fg=amSlateLight}%
+  \usebeamercolor[fg]{normal text}%
+}{%
+  \amdarkfalse
+}
+
+% -------------------------------------------------%
+% Cores beamer
+% -------------------------------------------------%
+\setbeamercolor{background canvas}{bg=white}
+\setbeamercolor{normal text}{fg=amNavy}
+\setbeamercolor{structure}{fg=amNavy}
+\setbeamercolor{frametitle}{fg=amNavy}
+\setbeamercolor{itemize item}{fg=amSlate}
+\setbeamercolor{itemize subitem}{fg=amSlate}
+\setbeamercolor{itemize subsubitem}{fg=amSlate}
+\setbeamercolor{enumerate item}{fg=amSlate}
+\setbeamercolor{caption name}{fg=amGray}
+\setbeamercolor{block title}{fg=white,bg=amNavy}
+\setbeamercolor{block body}{fg=amNavy,bg=amMist!40}
+\setbeamercolor{alerted text}{fg=amSignal}
+\setbeamercolor{footnote}{fg=amGrayFoot}
+\setbeamercolor{footnote mark}{fg=amGrayFoot}
+
+% -------------------------------------------------%
+% Tipografia (corpos fiéis ao potx, fator 0.4724)
+% -------------------------------------------------%
+\setbeamerfont{frametitle}{size={\fontsize{12.5}{14.5}}}
+\setbeamerfont{normal text}{size={\fontsize{7}{9.2}}}
+\setbeamerfont{itemize/enumerate body}{size={\fontsize{7}{9.2}}}
+\setbeamerfont{itemize/enumerate subbody}{size={\fontsize{6.2}{8.2}}}
+\setbeamerfont{itemize/enumerate subsubbody}{size={\fontsize{5.6}{7.4}}}
+\setbeamerfont{caption}{size={\fontsize{5}{6.5}}}
+\setbeamerfont{block title}{size={\fontsize{7.5}{9.5}},series=\bfseries}
+
+\AtBeginDocument{\fontsize{7}{9.2}\selectfont}
+
+% Marcadores: bullet simples (regramento oficial; nunca traço ou travessão)
+\setbeamertemplate{itemize item}{\textbullet}
+\setbeamertemplate{itemize subitem}{\raisebox{0.18ex}{\scriptsize\textbullet}}
+\setbeamertemplate{itemize subsubitem}{\raisebox{0.22ex}{\tiny\textbullet}}
+\setbeamertemplate{caption}{\amcondlightfont\insertcaption}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{blocks}[rounded=false]
+
+\setbeamersize{text margin left=3.2mm, text margin right=3.2mm}
+
+% -------------------------------------------------%
+% Dados extras da capa
+% -------------------------------------------------%
+\newcommand{\am@client}{}
+\newcommand{\client}[1]{\renewcommand{\am@client}{#1}}
+\newcommand{\am@coverimg}{\am@assets/covers/cover-light.jpg}
+\newcommand{\coverimage}[1]{\renewcommand{\am@coverimg}{#1}}
+\newcommand{\am@coverimgdark}{\am@assets/covers/cover-dark.jpg}
+\newcommand{\coverimagedark}[1]{\renewcommand{\am@coverimgdark}{#1}}
+% Rótulo de confidencialidade opcional (canto superior direito da capa)
+\newcommand{\am@confidencial}{}
+\newcommand{\confidencial}[1]{\renewcommand{\am@confidencial}{#1}}
+% Nível de classificação no rodapé de todos os slides de conteúdo (regramento)
+\newcommand{\am@classification}{}
+\newcommand{\amclassification}[1]{\renewcommand{\am@classification}{#1}}
+
+% -------------------------------------------------%
+% Take away e Fonte das informações (por frame)
+% -------------------------------------------------%
+\newcommand{\am@takeaway}{}
+\newcommand{\takeaway}[1]{\gdef\am@takeaway{#1}}
+\newcommand{\am@fonte}{}
+\newcommand{\fonte}[1]{\gdef\am@fonte{#1}}
+
+% -------------------------------------------------%
+% Cabeçalho dos frames de conteúdo
+%   eyebrow (seção)  +  régua slate  +  wordmark  +  título
+% -------------------------------------------------%
+\defbeamertemplate*{frametitle}{amclean}{}
+
+\newcommand{\am@chrome}{%
+  \begin{tikzpicture}[remember picture, overlay]
+    % régua superior em toda a largura (y = 4.72mm)
+    \draw[\am@eyebrowcolor, line width=0.5pt]
+      (current page.north west) ++(0,-4.72mm) -- ++(\paperwidth,0);
+    % eyebrow: seção corrente, caixa alta, Arial Nova Cond, tracking leve
+    \node[anchor=west, inner sep=0] at ($(current page.north west)+(3.2mm,-2.4mm)$)
+      {\amcondlightfont\addfontfeature{LetterSpace=6}\fontsize{5.2}{6}\selectfont
+       \color{\am@eyebrowcolor}\MakeUppercase{\insertsection}};
+    % wordmark A&M no canto superior direito
+    \node[anchor=east, inner sep=0] at ($(current page.north east)+(-3.2mm,-2.4mm)$)
+      {\includegraphics[width=14.3mm]{\am@logo}};
+  \end{tikzpicture}%
+}
+
+\newcommand{\am@pagenum}{%
+  \begin{tikzpicture}[remember picture, overlay]
+    \node[anchor=south east, inner sep=0]
+      at ($(current page.south east)+(-3.2mm,1.5mm)$)
+      {\amcondlightfont\fontsize{4.5}{5.5}\selectfont\color{amGrayFoot}\insertframenumber};
+  \end{tikzpicture}%
+}
+
+% headline desenha o chrome em todo frame de conteúdo
+\setbeamertemplate{headline}{%
+  \ifnum\insertframenumber>0\am@chrome\fi
+  \vspace*{5.2mm}%
+}
+
+% título do frame
+\setbeamertemplate{frametitle}{%
+  \vspace*{1.2mm}%
+  {\amlightfont\fontsize{12.5}{14}\selectfont\color{\am@fg}\insertframetitle\par}%
+  \ifx\insertframesubtitle\@empty\else
+    {\vspace*{0.6mm}\fontsize{7.5}{9}\selectfont\color{\am@fg}\insertframesubtitle\par}%
+  \fi
+  \vspace*{1.6mm}%
+}
+
+% rodapé: take away + fonte + número
+\setbeamertemplate{footline}{%
+  \ifx\am@takeaway\@empty\else
+    \begin{tikzpicture}[remember picture, overlay]
+      \node[anchor=south west, inner sep=0, text width=\dimexpr\paperwidth-30mm\relax]
+        at ($(current page.south west)+(3.2mm,5.8mm)$)
+        {\amcondfont\bfseries\fontsize{7.5}{9}\selectfont
+         \color{\am@fg}\am@takeaway};
+    \end{tikzpicture}%
+    \gdef\am@takeaway{}%
+  \fi
+  \ifx\am@fonte\@empty\else
+    \begin{tikzpicture}[remember picture, overlay]
+      \node[anchor=south west, inner sep=0]
+        at ($(current page.south west)+(3.2mm,1.5mm)$)
+        {\amcondlightfont\fontsize{4.5}{5.5}\selectfont\color{amGrayFoot}Fonte: \am@fonte};
+    \end{tikzpicture}%
+    \gdef\am@fonte{}%
+  \fi
+  \ifx\am@classification\@empty\else
+    \begin{tikzpicture}[remember picture, overlay]
+      \node[anchor=south, inner sep=0] at ($(current page.south)+(0,1.5mm)$)
+        {\amcondlightfont\fontsize{4.5}{5.5}\selectfont\color{amGrayFoot}\MakeUppercase{\am@classification}};
+    \end{tikzpicture}%
+  \fi
+  \am@pagenum
+}
+
+% -------------------------------------------------%
+% CAPA  —  \amcover (escura, padrão da casa)  ou  \amcover[light]
+% -------------------------------------------------%
+\newcommand{\amcover}[1][dark]{%
+  \begingroup
+  \def\am@mode{#1}%
+  \begin{frame}[plain, noframenumbering]
+    \begin{tikzpicture}[remember picture, overlay]
+      \ifdefstring{\am@mode}{dark}{%
+        \begin{scope}\clip (current page.north west) rectangle (current page.south east);
+          \node[anchor=center, inner sep=0] at (current page.center)
+            {\am@fitimg{\am@coverimgdark}{\paperwidth}{\paperheight}};
+        \end{scope}%
+        \def\am@coverfg{white}%
+        \node[anchor=north west, inner sep=0] at ($(current page.north west)+(3.2mm,-4.9mm)$)
+          {\includegraphics[width=46.9mm]{\am@assets/logos/am-infra-white.png}};
+      }{%
+        \begin{scope}\clip (current page.north west) rectangle (current page.south east);
+          \node[anchor=center, inner sep=0] at (current page.center)
+            {\am@fitimg{\am@coverimg}{\paperwidth}{\paperheight}};
+        \end{scope}%
+        \def\am@coverfg{amNavy}%
+        \node[anchor=north west, inner sep=0] at ($(current page.north west)+(3.2mm,-4.9mm)$)
+          {\includegraphics[width=46.9mm]{\am@assets/logos/am-infra-color.png}};
+      }%
+      % Três réguas da capa, começando alinhadas com o texto (x=3.2mm) e
+      % terminando junto com o fim da data (x=paperwidth-3.2mm).
+      % Respiros: 50% do corpo do título (19pt -> 3.3mm) ao redor do título;
+      % 50% do corpo do subtítulo (7.5pt -> 1.3mm) ao redor do subtítulo.
+      \draw[\am@coverfg, line width=0.4pt]
+        ($(current page.north west)+(3.2mm,-67.4mm)$) -- ($(current page.north east)+(-3.2mm,-67.4mm)$);
+      \draw[\am@coverfg, line width=0.4pt]
+        ($(current page.north west)+(3.2mm,-80.7mm)$) -- ($(current page.north east)+(-3.2mm,-80.7mm)$);
+      \draw[\am@coverfg, line width=0.4pt]
+        ($(current page.north west)+(3.2mm,-86.1mm)$) -- ($(current page.north east)+(-3.2mm,-86.1mm)$);
+      % Título grande (40pt PPT -> 19pt, Arial Nova Light): cliente, ou o título
+      % da apresentação quando \client não for definido
+      \node[anchor=north west, inner sep=0, text width=153mm]
+        at ($(current page.north west)+(3.2mm,-70.7mm)$)
+        {\amlightnhfont\fontsize{19}{21}\selectfont\color{\am@coverfg}%
+         \ifdefempty{\am@client}{\inserttitle}{\am@client}};
+      % Linha do subtítulo (16pt PPT -> 7.5pt, Arial Nova Light)
+      \node[anchor=north west, inner sep=0, text width=102mm]
+        at ($(current page.north west)+(3.2mm,-82.1mm)$)
+        {\amlightfont\fontsize{7.5}{9}\selectfont\color{\am@coverfg}%
+         \ifdefempty{\am@client}{\insertsubtitle}{\inserttitle}};
+      % Data (alinhada à direita, Arial Nova Light)
+      \node[anchor=north east, inner sep=0]
+        at ($(current page.north east)+(-3.2mm,-82.1mm)$)
+        {\amlightfont\fontsize{7.5}{9}\selectfont\color{\am@coverfg}\insertdate};
+      % Rótulo de confidencialidade (opcional, canto superior direito)
+      \ifx\am@confidencial\@empty\else
+        \node[anchor=north east, inner sep=0]
+          at ($(current page.north east)+(-3.2mm,-5.2mm)$)
+          {\amlightfont\addfontfeature{LetterSpace=6}\fontsize{5.5}{6.5}\selectfont
+           \color{\am@coverfg}\MakeUppercase{\am@confidencial}};
+      \fi
+    \end{tikzpicture}%
+  \end{frame}
+  \endgroup
+}
+
+% -------------------------------------------------%
+% CAPA CORPORATIVA V2 — \amcovercorp[dark|light]{foto-direita}
+% Layout "Cover Static" do template Apresentação Institucional_V2:
+% banda vertical com o grafismo A&M à esquerda (logo, data, título,
+% confidencialidade) e foto full-height à direita.
+% Fotos do catálogo: covers/cidade-ruas.jpg, energia.jpg, global.jpg,
+% tecnologia.jpg, america-sul.jpg, cover-dark.jpg, cover-light.jpg...
+% -------------------------------------------------%
+\NewDocumentCommand{\amcovercorp}{O{dark} m}{%
+  \begingroup
+  \def\am@mode{#1}%
+  \begin{frame}[plain, noframenumbering]
+    \begin{tikzpicture}[remember picture, overlay]
+      % foto à direita (de x=55.7mm até a borda, altura cheia, com clip)
+      \begin{scope}
+        \clip ($(current page.north west)+(55.7mm,0)$) rectangle (current page.south east);
+        \node[anchor=center, inner sep=0]
+          at ($(current page.east)+(-52.15mm,0)$)
+          {\am@fitimg{#2}{104.3mm}{\paperheight}};
+      \end{scope}
+      % banda com grafismo A (48.7mm, altura cheia)
+      \ifdefstring{\am@mode}{dark}{%
+        \node[anchor=north west, inner sep=0] at (current page.north west)
+          {\includegraphics[width=48.7mm, height=\paperheight]{\am@assets/covers/banda-dark.jpg}};
+        \def\am@ccfg{white}%
+        \node[anchor=north west, inner sep=0] at ($(current page.north west)+(4mm,-4.9mm)$)
+          {\includegraphics[width=30mm]{\am@assets/logos/am-infra-white.png}};
+      }{%
+        \node[anchor=north west, inner sep=0] at (current page.north west)
+          {\includegraphics[width=48.7mm, height=\paperheight]{\am@assets/covers/banda-light.jpg}};
+        \def\am@ccfg{amNavy}%
+        \node[anchor=north west, inner sep=0] at ($(current page.north west)+(4mm,-4.9mm)$)
+          {\includegraphics[width=30mm]{\am@assets/logos/am-infra-color.png}};
+      }%
+      % cliente (opcional), data e título, todos em Arial Nova Light
+      \ifdefempty{\am@client}{}{%
+        \node[anchor=north west, inner sep=0, text width=40mm]
+          at ($(current page.north west)+(4.5mm,-37mm)$)
+          {\amlightfont\fontsize{8}{10}\selectfont\color{\am@ccfg}\am@client};
+      }%
+      \node[anchor=north west, inner sep=0]
+        at ($(current page.north west)+(4.5mm,-42.3mm)$)
+        {\amlightfont\addfontfeature{LetterSpace=6}\fontsize{6}{7}\selectfont
+         \color{\am@ccfg}\MakeUppercase{\insertdate}};
+      \node[anchor=north west, inner sep=0, text width=41mm, align=left]
+        at ($(current page.north west)+(4.5mm,-45.8mm)$)
+        {\amlightnhfont\fontsize{15}{17.5}\selectfont\color{\am@ccfg}\inserttitle};
+      % confidencialidade na base da banda
+      \ifx\am@confidencial\@empty\else
+        \node[anchor=south west, inner sep=0]
+          at ($(current page.south west)+(4.5mm,3.5mm)$)
+          {\amlightfont\addfontfeature{LetterSpace=6}\fontsize{4}{5}\selectfont
+           \color{\am@ccfg}\MakeUppercase{\am@confidencial}};
+      \fi
+    \end{tikzpicture}%
+  \end{frame}
+  \endgroup
+}
+
+% -------------------------------------------------%
+% SEPARADOR DE SEÇÃO
+%   \amsection{Título}                separador claro
+%   \amsection[dark]{Título}          separador navy
+%   \amsection[dark]{Título}[foto]    com foto na metade direita
+% Cria a \section, numera o capítulo automaticamente (01, 02, ...)
+% e desenha o frame divisor no estilo "Section break" do potx.
+% -------------------------------------------------%
+\newcounter{amchapter}
+\NewDocumentCommand{\amsection}{O{light} m o}{%
+  \section{#2}%
+  \stepcounter{amchapter}%
+  \begingroup
+  \def\am@mode{#1}%
+  \begin{frame}[plain, noframenumbering]
+    \begin{tikzpicture}[remember picture, overlay]
+      \ifdefstring{\am@mode}{dark}{%
+        \fill[amNavy] (current page.north west) rectangle (current page.south east);
+        \def\am@sbfg{white}\def\am@sblogo{\am@assets/logos/am-wordmark-white.png}%
+        \def\am@sbeyebrow{amSlateLight}%
+      }{%
+        \def\am@sbfg{amNavy}\def\am@sblogo{\am@assets/logos/am-wordmark-navy.png}%
+        \def\am@sbeyebrow{amSlate}%
+      }%
+      % foto opcional ocupando a metade direita (full-bleed, com clip)
+      \IfValueT{#3}{%
+        \begin{scope}
+          \clip ($(current page.north west)+(0.55\paperwidth,0)$)
+            rectangle (current page.south east);
+          \node[anchor=east, inner sep=0] at (current page.east)
+            {\includegraphics[height=\paperheight]{#3}};
+        \end{scope}%
+      }%
+      \draw[\am@sbeyebrow, line width=0.5pt]
+        (current page.north west) ++(0,-4.72mm) -- ++(\paperwidth,0);
+      \node[anchor=east, inner sep=0] at ($(current page.north east)+(-3.2mm,-2.4mm)$)
+        {\includegraphics[width=14.3mm]{\am@sblogo}};
+      % Número do capítulo (01, 02, ...) acima do título
+      \node[anchor=north west, inner sep=0]
+        at ($(current page.north west)+(3.2mm,-29mm)$)
+        {\amlightfont\fontsize{26}{28}\selectfont
+         \color{\am@sbeyebrow}\two@digits{\value{amchapter}}};
+      % Título grande (40pt potx -> 19pt) a meia altura, sem hifenização
+      \node[anchor=north west, inner sep=0,
+            text width=\IfValueTF{#3}{80mm}{140mm}]
+        at ($(current page.north west)+(3.2mm,-43mm)$)
+        {\amlightnhfont\raggedright\fontsize{19}{22}\selectfont\color{\am@sbfg}#2};
+    \end{tikzpicture}%
+  \end{frame}
+  \endgroup
+}
+
+% -------------------------------------------------%
+% CONTRACAPA — \ambackcover  /  \ambackcover[Nome · email]
+% -------------------------------------------------%
+\newcommand{\am@legal}{Alvarez \& Marsal Holdings, LLC. All rights reserved.
+ALVAREZ \& MARSAL\textsuperscript{®} and A\&M\textsuperscript{®} are trademarks of
+Alvarez \& Marsal Holdings, LLC. © Copyright \the\year}
+\newcommand{\amlegal}[1]{\renewcommand{\am@legal}{#1}}   % use \amlegal{} para omitir
+
+\NewDocumentCommand{\ambackcover}{o}{%
+  \begin{frame}[plain, noframenumbering]
+    \begin{tikzpicture}[remember picture, overlay]
+      \fill[amBackNavy] (current page.north west) rectangle (current page.south east);
+      \node[anchor=center, inner sep=0] at (current page.center)
+        {\includegraphics[width=\paperwidth, height=\paperheight]{\am@assets/covers/backcover.jpg}};
+      % logo sobe um pouco quando há bloco de contato
+      \IfNoValueTF{#1}{%
+        \node[anchor=center, inner sep=0]
+          at ($(current page.north west)+(0.5\paperwidth,-78.6mm)$)
+          {\includegraphics[width=35.9mm]{\am@assets/logos/am-infra-white.png}};
+      }{%
+        \node[anchor=center, inner sep=0]
+          at ($(current page.north west)+(0.5\paperwidth,-74mm)$)
+          {\includegraphics[width=35.9mm]{\am@assets/logos/am-infra-white.png}};
+        \node[anchor=south, inner sep=0, align=center,
+              font=\fontsize{5.5}{7}\selectfont]
+          at ($(current page.south)+(0,1.8mm)$)
+          {\color{amMist}#1};
+      }%
+    \end{tikzpicture}%
+  \end{frame}
+}
+
+% -------------------------------------------------%
+% Componentes de conteúdo
+% -------------------------------------------------%
+% Caixa de destaque (número/insight) — estilo "Caixa de destaque" do potx
+\newcommand{\amhighlight}[2]{%
+  {\amcondfont\bfseries\fontsize{12}{13.5}\selectfont\color{amSignal}#1\par}%
+  {\vspace*{0.4mm}\amcondlightfont\fontsize{6.2}{8}\selectfont\color{\am@fg}#2\par}%
+}
+
+% Stat: número grande + rótulo (respiro extra após o rótulo para empilhar)
+\newcommand{\amstat}[2]{%
+  \begin{minipage}[t]{\linewidth}
+    {\amcondfont\bfseries\fontsize{14}{15}\selectfont\color{amSignal}#1\par}
+    {\vspace*{0.7mm}\amcondlightfont\fontsize{5.6}{7}\selectfont\color{amGray}#2\par}
+    \vspace*{2.2mm}
+  \end{minipage}%
+}
+
+% Timeline horizontal — \amtimeline{Rótulo 1/Texto um, Rótulo 2/Texto dois, ...}
+% Separador de itens: vírgula. Separador rótulo/texto: barra.
+% Evitar vírgulas dentro dos itens (ou proteger o item com chaves).
+\newcommand{\amtimeline}[1]{%
+  \begin{center}
+  \begin{tikzpicture}
+    \foreach \am@lbl/\am@txt [count=\am@i] in {#1} {\global\let\am@n=\am@i}
+    \pgfmathsetmacro{\am@colw}{0.9*\textwidth/\am@n}%
+    \pgfmathsetmacro{\am@step}{\am@n>1 ? (\textwidth-\am@colw)/(\am@n-1) : 1}%
+    \draw[amSlate, line width=0.6pt] (0,0) -- (\am@n*\am@step pt-\am@step pt,0);
+    \foreach \am@lbl/\am@txt [count=\am@i from 0] in {#1} {
+      \fill[amSignal] (\am@i*\am@step pt,0) circle (1.1mm);
+      \node[anchor=south, inner sep=0, yshift=2.2mm,
+            text width=\am@colw pt, align=center]
+        at (\am@i*\am@step pt,0)
+        {\amcondnhfont\bfseries\fontsize{6.5}{8}\selectfont\color{\am@fg}\am@lbl};
+      \node[anchor=north, inner sep=0, yshift=-2.2mm,
+            text width=\am@colw pt, align=center]
+        at (\am@i*\am@step pt,0)
+        {\amcondlightnhfont\fontsize{5.6}{7.2}\selectfont\color{\ifamdark amMist\else amGray\fi}\am@txt};
+    }
+  \end{tikzpicture}
+  \end{center}
+}
+
+% Card flat com borda 0.5pt (sem sombra, conforme brand guide)
+\newenvironment{amcard}{%
+  \begin{tcolorbox}[enhanced, sharp corners, boxrule=0.5pt,
+    colframe=amMist, colback=white, left=2.4mm, right=2.4mm,
+    top=2.2mm, bottom=2.2mm, boxsep=0pt]%
+    \setbeamercolor{normal text}{fg=amNavy}%
+    \setbeamercolor{itemize/enumerate body}{fg=amNavy}%
+    \usebeamercolor[fg]{normal text}\color{amNavy}%
+}{\end{tcolorbox}}
+
+% -------------------------------------------------%
+% Componentes derivados dos decks oficiais (v1.2)
+% -------------------------------------------------%
+
+% AGENDA / PROGRESSO (slide escuro do Template: lista de seções,
+% a corrente em branco, as demais em slate atenuado)
+% \amagenda{2}{Contexto, Proposta comercial, Cronograma, Investimento}
+\NewDocumentCommand{\amagenda}{m m}{%
+  \begin{frame}[plain, noframenumbering]
+    \begin{tikzpicture}[remember picture, overlay]
+      \fill[amNavy] (current page.north west) rectangle (current page.south east);
+      \draw[amSlateLight, line width=0.5pt]
+        (current page.north west) ++(0,-4.72mm) -- ++(\paperwidth,0);
+      \node[anchor=east, inner sep=0] at ($(current page.north east)+(-3.2mm,-2.4mm)$)
+        {\includegraphics[width=14.3mm]{\am@assets/logos/am-wordmark-white.png}};
+      \edef\am@agcur{#1}%
+      \foreach \am@item [count=\am@i] in {#2} {\global\let\am@nag=\am@i}
+      \pgfmathsetmacro{\am@agystart}{45 - \am@nag*4.5}%
+      \draw[amSlate!45, line width=0.3pt]
+        ($(current page.north west)+(33mm,-\am@agystart mm+2mm)$) -- ++(95mm,0);
+      \foreach \am@item [count=\am@i] in {#2} {
+        \ifnum\am@i=\am@agcur\relax
+          \def\am@agtxt{\fontsize{11}{13}\selectfont\color{white}}%
+          \def\am@aglc{white}%
+        \else
+          \def\am@agtxt{\amlightfont\fontsize{11}{13}\selectfont\color{amSlate!75}}%
+          \def\am@aglc{amSlate!45}%
+        \fi
+        \node[anchor=north west, inner sep=0]
+          at ($(current page.north west)+(33mm,{-\am@agystart mm-(\am@i-1)*9mm-3mm})$)
+          {\am@agtxt\am@item};
+        \draw[\am@aglc, line width=0.3pt]
+          ($(current page.north west)+(33mm,{-\am@agystart mm-\am@i*9mm+1mm})$) -- ++(95mm,0);
+      }
+    \end{tikzpicture}%
+  \end{frame}
+}
+
+% FAIXA DE STATS (decks institucionais: números grandes lado a lado
+% com separadores verticais)
+% \amstatstrip{+40/anos de atuação, 46/países, +1.1k/profissionais}
+\newcommand{\amstatstrip}[1]{%
+  \begin{center}
+  \begin{tikzpicture}
+    \foreach \am@num/\am@lbl [count=\am@i] in {#1} {\global\let\am@ns=\am@i}
+    \pgfmathsetmacro{\am@sw}{(\textwidth-8mm)/\am@ns}%
+    \foreach \am@num/\am@lbl [count=\am@i from 0] in {#1} {
+      \node[anchor=north, inner sep=0, text width=\am@sw pt, align=center]
+        at ({(\am@i+0.5)*\am@sw pt},0)
+        {\amcondfont\bfseries\fontsize{16}{17}\selectfont\color{amSignal}\am@num};
+      \node[anchor=north, inner sep=0, text width={\am@sw pt - 6mm}, align=center]
+        at ({(\am@i+0.5)*\am@sw pt},-7.5mm)
+        {\amcondlightnhfont\fontsize{5.6}{7}\selectfont
+         \color{\ifamdark amMist\else amGray\fi}\am@lbl};
+      \ifnum\am@i>0
+        \draw[\ifamdark amSlate!50\else amMist\fi, line width=0.4pt]
+          ({\am@i*\am@sw pt},-1mm) -- ({\am@i*\am@sw pt},-12mm);
+      \fi
+    }
+  \end{tikzpicture}
+  \end{center}
+}
+
+% BLOCO DE KPI (painel de resultados dos cartões de credenciais)
+% \amkpi{US\$ 4,5 BI}{capex otimizado no programa}
+\newcommand{\amkpi}[2]{%
+  \begin{tcolorbox}[sharp corners, boxrule=0pt, colback=amSlate!15,
+    left=2.4mm, right=2.4mm, top=2mm, bottom=2mm, boxsep=0pt]
+    {\amcondfont\bfseries\fontsize{13}{14}\selectfont\color{amNavy}#1\par}
+    {\vspace*{0.4mm}\amcondlightfont\fontsize{5.6}{7}\selectfont\color{amGray}#2\par}
+  \end{tcolorbox}}
+
+% BIO (cartão de pessoa do Institutional_Bios: foto circular com anel
+% slate, nome navy, cargo slate, texto cinza)
+% \ambio{img/foto.jpg}{Nome Sobrenome}{Managing Director}{São Paulo, Brasil}{Bio em 2 a 4 frases.}
+% Foto vazia ({}) desenha o placeholder cinza.
+\newcommand{\ambio}[5]{%
+  \begin{minipage}[t]{\linewidth}
+    \begin{tikzpicture}
+      \ifstrempty{#1}{%
+        \fill[amMist] (0,0) circle (7.5mm);
+      }{%
+        \begin{scope}\clip (0,0) circle (7.5mm);
+          \node[inner sep=0] at (0,0) {\includegraphics[width=15.5mm]{#1}};
+        \end{scope}%
+      }%
+      \draw[amSlate, line width=0.4pt] (0,0) circle (7.9mm);
+    \end{tikzpicture}\par\vspace{1.6mm}
+    {\bfseries\fontsize{8}{9.5}\selectfont\color{amNavy}#2\par}
+    {\vspace*{0.5mm}\amcondlightfont\fontsize{5.6}{7}\selectfont\color{amSlate}#3\\#4\par}
+    \vspace{1.6mm}
+    {\amcondlightfont\fontsize{5.6}{7.4}\selectfont\color{\ifamdark amMist\else amGray\fi}#5\par}
+  \end{minipage}}
+
+% GANTT (componente oficial: barras slate com pontos nas extremidades,
+% colunas de meses com linhas tracejadas)
+% \amgantt{Jan, Fev, Mar, Abr, Mai, Jun}{Diagnóstico/1/2, Desenho/2/4, Implementação/4/6}
+\newcommand{\amgantt}[2]{%
+  \begin{center}
+  \begin{tikzpicture}
+    \foreach \am@m [count=\am@i] in {#1} {\global\let\am@ngm=\am@i}
+    \foreach \am@r/\am@a/\am@b [count=\am@j] in {#2} {\global\let\am@ngr=\am@j}
+    \def\am@glw{30mm}%
+    \pgfmathsetmacro{\am@gcw}{(\textwidth-\am@glw-4mm)/\am@ngm}%
+    \pgfmathsetmacro{\am@gh}{\am@ngr*8}%
+    \pgfmathsetmacro{\am@gtot}{\textwidth-4mm}%
+    \def\am@dotstart{\ifamdark white\else amNavy\fi}%
+    % cabeçalho de meses + grade tracejada
+    \foreach \am@m [count=\am@i from 0] in {#1} {
+      \node[anchor=south, inner sep=0]
+        at ({\am@glw+(\am@i+0.5)*\am@gcw pt},1.5mm)
+        {\amcondlightfont\fontsize{5.6}{7}\selectfont\color{amGray}\am@m};
+      \draw[amMist, dashed, line width=0.3pt]
+        ({\am@glw+(\am@i+1)*\am@gcw pt},0) -- ({\am@glw+(\am@i+1)*\am@gcw pt},-\am@gh mm);
+    }
+    \draw[amGrayMid, line width=0.4pt] (0,0) -- (\am@gtot pt,0);
+    % linhas de atividade
+    \foreach \am@r/\am@a/\am@b [count=\am@j] in {#2} {
+      \pgfmathsetmacro{\am@gy}{-(\am@j-0.5)*8}%
+      \node[anchor=west, inner sep=0, text width={\am@glw-2mm}]
+        at (0,\am@gy mm)
+        {\amcondlightfont\fontsize{6.2}{7.5}\selectfont\color{\am@fg}\am@r};
+      \fill[amSlate!35, rounded corners=1.4mm]
+        ({\am@glw+(\am@a-1)*\am@gcw pt+1mm},\am@gy mm-1.4mm)
+        rectangle ({\am@glw+\am@b*\am@gcw pt-1mm},\am@gy mm+1.4mm);
+      \fill[\am@dotstart]
+        ({\am@glw+(\am@a-1)*\am@gcw pt+2.4mm},\am@gy mm) circle (1mm);
+      \fill[amSignal] ({\am@glw+\am@b*\am@gcw pt-2.4mm},\am@gy mm) circle (1mm);
+      \draw[amMist, line width=0.3pt]
+        (0,{\am@gy mm-4mm}) -- (\am@gtot pt,{\am@gy mm-4mm});
+    }
+  \end{tikzpicture}
+  \end{center}
+}
+
+% BACKUP (divisor claro do Template, antes dos anexos)
+\NewDocumentCommand{\ambackup}{O{Backup}}{%
+  \begin{frame}[plain, noframenumbering]
+    \begin{tikzpicture}[remember picture, overlay]
+      \node[anchor=center, inner sep=0] at (current page.center)
+        {\includegraphics[width=\paperwidth, height=\paperheight]{\am@coverimg}};
+      \draw[amSlate, line width=0.5pt]
+        (current page.north west) ++(0,-4.72mm) -- ++(\paperwidth,0);
+      \node[anchor=east, inner sep=0] at ($(current page.north east)+(-3.2mm,-2.4mm)$)
+        {\includegraphics[width=14.3mm]{\am@assets/logos/am-wordmark-navy.png}};
+      \node[anchor=north west, inner sep=0]
+        at ($(current page.north west)+(3.2mm,-43mm)$)
+        {\amlightfont\fontsize{19}{22}\selectfont\color{amNavy}#1};
+    \end{tikzpicture}%
+  \end{frame}
+}
+
+\mode<all>

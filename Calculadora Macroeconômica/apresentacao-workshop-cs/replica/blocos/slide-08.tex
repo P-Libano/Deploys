@@ -1,0 +1,30 @@
+\begin{frame}{A metodologia que sustenta cada número}
+  \takeaway{Cada valor corrigido combina dados realizados em fator acumulado com projeções de mercado, sempre identificando qual parte do cálculo é fato e qual é expectativa.}
+  \fonte{ENGINE\_CONTEXT.md, API SGS e Boletim Focus do Banco Central do Brasil (2026)}
+  \vspace{4mm}
+  \begin{columns}[T, onlytextwidth]
+    \begin{column}{0.58\textwidth}
+      \begin{tabular}{lccc}
+        \rowcolor{amNavy}\color{white}Índice & \color{white}Fonte SGS & \color{white}Início & \color{white}Projeção \\
+        \rowcolor{amTableStripe}IPCA & 433 & 07/1994 & Focus + ETTJ \\
+        IGP-M & 189 & 01/1940 & Focus \\
+        \rowcolor{amTableStripe}IPCA-15 & 7478 & 02/1999 & Focus \\
+        INPC & 188 & 01/1979 & Focus \\
+        \rowcolor{amTableStripe}INCC & 192 & 01/1985 & -- \\
+        SELIC & 4390 & 06/1986 & -- \\
+        \rowcolor{amTableStripe}CDI & 4391 & 06/1986 & -- \\
+      \end{tabular}
+    \end{column}
+    \begin{column}{0.38\textwidth}
+      {\bfseries Como o fator é calculado}\par\vspace{1.5mm}
+      {\bfseries\color{amSignal}factor = \(\prod (1+r_t/100)\)}\par\vspace{1.5mm}
+      \begin{itemize}
+        \item Realizado: produto encadeado das taxas mensais entre as duas datas
+        \item Focus: taxa anual mediana distribuída em taxa mensal composta uniforme
+        \item ETTJ: taxas forward da curva de inflação implícita ANBIMA (NTN-B), só para IPCA
+      \end{itemize}
+      \vspace{4mm}\textcolor{amMist}{\rule{0.92\linewidth}{0.3pt}}\vspace{3mm}
+      {\amcondlightfont\color{amGray}IPCA, IGP-M, IPCA-15 e INPC têm projeção Focus, e o IPCA soma também a opção ETTJ. INCC, SELIC e CDI não projetam: a data final fica limitada ao último dado realizado.}
+    \end{column}
+  \end{columns}
+\end{frame}

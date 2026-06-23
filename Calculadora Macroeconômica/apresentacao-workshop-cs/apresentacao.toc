@@ -1,0 +1,2 @@
+\beamer@sectionintoc {1}{Da dor ao deck em minutos}{2}{0}{1}
+\beamer@sectionintoc {2}{Estudo de caso ao vivo: Calculadora Macroeconômica}{6}{0}{2}

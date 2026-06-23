@@ -1,0 +1,33 @@
+\begin{frame}{Por dentro do projeto: de coletores a interface}
+  \takeaway{A Calculadora Macroeconômica organiza a correção monetária em três camadas claras, captura de dados, motor de cálculo e interface, o que tornou a leitura automática do projeto direta.}
+  \fonte{ENGINE\_CONTEXT.md, repositório do projeto (2026)}
+  \vspace{4mm}
+  \begin{columns}[T, onlytextwidth]
+    \begin{column}{0.32\textwidth}
+      \begin{amcard}
+        \includegraphics[width=5mm]{decoracao/icones/database-navy.pdf}\ {\bfseries Coletores}\par\vspace{1.5mm}
+        BCB SGS (séries realizadas), Boletim Focus (projeções), ANBIMA ETTJ (inflação implícita), B3 DI1 (curva de juros) e IBGE Sidra.
+      \end{amcard}
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      \begin{amcard}
+        \includegraphics[width=5mm]{decoracao/icones/cog-navy.pdf}\ {\bfseries Motor}\par\vspace{1.5mm}
+        Módulos \texttt{deflator}, \texttt{index\_builder}, \texttt{projector} e \texttt{vector} calculam fator acumulado e vetores mensais.
+      \end{amcard}
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      \begin{amcard}
+        \includegraphics[width=5mm]{decoracao/icones/monitor-navy.pdf}\ {\bfseries Interface}\par\vspace{1.5mm}
+        App Streamlit com 6 abas: Calculadora, Vetor de Correção, ETTJ, Curva de Juros, Log de Atualizações, Documentação.
+      \end{amcard}
+    \end{column}
+  \end{columns}
+  \vspace{2mm}
+  \amstatstrip{7/índices suportados, 4/fontes de dados, 1--7 dias/ciclo de cache}
+  \begin{center}
+    \begin{minipage}{0.78\textwidth}
+      \centering
+      {\amcondlightfont\color{amGray}Um único arquivo, ENGINE\_CONTEXT.md, já documenta contratos e limites do motor: código dividido por responsabilidade vira roteiro sem reunião de levantamento.}
+    \end{minipage}
+  \end{center}
+\end{frame}

@@ -1,0 +1,35 @@
+\documentclass[border=1pt]{standalone}
+\usepackage{fontspec}
+\setmainfont{ArialNova}[
+  Path = ../fonts/,
+  Extension = .ttf,
+  UprightFont = *-Light,
+  BoldFont = *-Bold,
+]
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning}
+\definecolor{amNavy}{HTML}{002B49}
+\definecolor{amGray}{HTML}{646464}
+\begin{document}
+\begin{tikzpicture}[
+  node distance=4mm,
+  every node/.style={font=\fontsize{6}{7}\selectfont},
+  box/.style={rectangle, fill=amNavy, text=white, rounded corners=1pt,
+    minimum width=18mm, minimum height=9mm, align=center, inner sep=1mm},
+  arr/.style={-{Stealth}, draw=amGray, line width=0.5pt}
+]
+\node[box] (n1) {01 Roteiro};
+\node[box, right=of n1] (n2) {02 Avaliação};
+\node[box, right=of n2] (n3) {03 Layout};
+\node[box, right=of n3] (n4) {04 Gráficos};
+\node[box, right=of n4] (n5) {05 Decoração};
+\node[box, right=of n5] (n6) {06 Código};
+\node[box, right=of n6] (n7) {07 QA};
+\draw[arr] (n1) -- (n2);
+\draw[arr] (n2) -- (n3);
+\draw[arr] (n3) -- (n4);
+\draw[arr] (n4) -- (n5);
+\draw[arr] (n5) -- (n6);
+\draw[arr] (n6) -- (n7);
+\end{tikzpicture}
+\end{document}

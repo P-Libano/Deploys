@@ -1,0 +1,184 @@
+% Workshop CS | Calculadora Macroeconômica
+% Compilar com XeLaTeX (2 passadas): bash compilar.sh apresentacao
+\documentclass[aspectratio=169, 8pt, t]{beamer}
+\usetheme[assets=.]{amclean}
+\usepackage{booktabs, colortbl}
+\usepackage{qrcode}
+
+\client{Workshop CS}
+\title{Calculadora Macroeconômica: de repositório a apresentação}
+\date{22.06.2026}
+
+\begin{document}
+
+\coverimagedark{covers/tecnologia.jpg}
+\amcover[dark]
+
+% ===================== CAPÍTULO 1 =====================
+\amsection[dark]{Da dor ao deck em minutos}
+
+\begin{frame}{Objetivos deste workshop}
+  \takeaway{Ao final deste workshop, o time de Capital Strategy entende como transformar um repositório de código e dados em uma apresentação pronta, sem depender de designer ou de horas de formatação manual.}
+  \vspace{4mm}
+  \begin{columns}[T, onlytextwidth]
+    \begin{column}{0.5\textwidth}
+      {\amcondfont\bfseries\color{amSignal}01\quad}\includegraphics[width=5mm]{decoracao/icones/search-slate.pdf}\ Como a pipeline lê um projeto real (código, dados, documentação) e gera um roteiro estruturado\par
+      \vspace{2mm}\textcolor{amMist}{\rule{\linewidth}{0.3pt}}\vspace{4mm}
+      {\amcondfont\bfseries\color{amSignal}02\quad}\includegraphics[width=5mm]{decoracao/icones/shield-check-slate.pdf}\ Como cada etapa (roteiro, layout, gráficos, decoração, código, QA) é revisada por um agente especialista antes de avançar\par
+      \vspace{2mm}\textcolor{amMist}{\rule{\linewidth}{0.3pt}}\vspace{4mm}
+      {\amcondfont\bfseries\color{amSignal}03\quad}\includegraphics[width=5mm]{decoracao/icones/file-text-slate.pdf}\ Este próprio deck como prova: foi gerado a partir da pasta do projeto Calculadora Macroeconômica
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \amkpi{7 etapas}{do roteiro ao PDF final}
+      \vspace{6mm}\textcolor{amMist}{\rule{0.92\linewidth}{0.3pt}}\vspace{4mm}
+      \begin{itemize}
+        \item Propostas e relatórios de Capital Strategy nascem de planilhas, modelos e memos densos
+        \item Hoje, tempo de formatação compete com tempo de análise
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{A dor: dados prontos, apresentação represada}
+  \takeaway{O gargalo de uma apresentação raramente é a análise, é transformar a análise em slides consistentes e bem desenhados na velocidade que o negócio pede.}
+  \fonte{referência interna A\&M, estrutura-deck.md}
+  \vspace{4mm}
+  \begin{columns}[T, onlytextwidth]
+    \begin{column}{0.58\textwidth}
+      {\bfseries Sintomas comuns}\par\vspace{1.5mm}
+      \begin{itemize}
+        \item Horas redistribuindo a mesma tabela em formatos diferentes a cada apresentação
+        \item Gráficos refeitos manualmente sempre que um dado é atualizado
+        \item Identidade visual inconsistente entre decks do mesmo projeto
+        \item Revisão de conteúdo e revisão de design acontecendo nas mesmas idas e voltas
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.38\textwidth}
+      \amhighlight{8--12}{slides por proposta A\&M, hoje gastos em formatação}
+      \vspace{4mm}
+      \begin{amcard}
+        {\bfseries Custo real}\par\vspace{1.5mm}
+        Cada deck consome ciclos de analista sênior em tarefa de formatação, não de julgamento.\par\vspace{2mm}
+        É o intervalo que, hoje, amarra contexto, escopo e investimento em cada proposta.
+      \end{amcard}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Como funciona o apresentacao-rapida-am}
+  \takeaway{Dividir a criação do deck em sete etapas com validação cruzada entre agentes é o que permite trocar reunião de design por revisão automática, sem perder rigor.}
+  \vspace{5mm}
+  \begin{center}
+    \includegraphics[width=0.96\textwidth]{decoracao/_valida_d1.pdf}
+  \end{center}
+  \vspace{4mm}
+  \begin{columns}[T, onlytextwidth]
+    \begin{column}{0.5\textwidth}
+      {\bfseries O que isso garante}\par\vspace{1mm}
+      Cada uma das 7 etapas, do roteiro ao código LaTeX, passa por validação própria antes de avançar para a próxima, o que elimina retrabalho de formatação e inconsistência visual entre seções do mesmo deck.
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      {\bfseries O que isso elimina}\par\vspace{1mm}
+      \begin{itemize}
+        \item Retrabalho manual de formatação e diagramação
+        \item Inconsistência visual entre seções do mesmo deck
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ===================== CAPÍTULO 2 =====================
+\amsection[light]{Estudo de caso ao vivo: Calculadora Macroeconômica}
+
+\begin{frame}{Por dentro do projeto: de coletores a interface}
+  \takeaway{A Calculadora Macroeconômica organiza a correção monetária em três camadas claras, captura de dados, motor de cálculo e interface, o que tornou a leitura automática do projeto direta.}
+  \fonte{ENGINE\_CONTEXT.md, repositório do projeto (2026)}
+  \vspace{4mm}
+  \begin{columns}[T, onlytextwidth]
+    \begin{column}{0.32\textwidth}
+      \begin{amcard}
+        \includegraphics[width=5mm]{decoracao/icones/database-navy.pdf}\ {\bfseries Coletores}\par\vspace{1.5mm}
+        BCB SGS (séries realizadas), Boletim Focus (projeções), ANBIMA ETTJ (inflação implícita), B3 DI1 (curva de juros) e IBGE Sidra.
+      \end{amcard}
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      \begin{amcard}
+        \includegraphics[width=5mm]{decoracao/icones/cog-navy.pdf}\ {\bfseries Motor}\par\vspace{1.5mm}
+        Módulos \texttt{deflator}, \texttt{index\_builder}, \texttt{projector} e \texttt{vector} calculam fator acumulado e vetores mensais.
+      \end{amcard}
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      \begin{amcard}
+        \includegraphics[width=5mm]{decoracao/icones/monitor-navy.pdf}\ {\bfseries Interface}\par\vspace{1.5mm}
+        App Streamlit com 6 abas: Calculadora, Vetor de Correção, ETTJ, Curva de Juros, Log de Atualizações, Documentação.
+      \end{amcard}
+    \end{column}
+  \end{columns}
+  \vspace{2mm}
+  \amstatstrip{7/índices suportados, 4/fontes de dados, 1--7 dias/ciclo de cache}
+  \begin{center}
+    \begin{minipage}{0.78\textwidth}
+      \centering
+      {\amcondlightfont\color{amGray}Um único arquivo, ENGINE\_CONTEXT.md, já documenta contratos e limites do motor: código dividido por responsabilidade vira roteiro sem reunião de levantamento.}
+    \end{minipage}
+  \end{center}
+\end{frame}
+
+\begin{frame}{A metodologia que sustenta cada número}
+  \takeaway{Cada valor corrigido combina dados realizados em fator acumulado com projeções de mercado, sempre identificando qual parte do cálculo é fato e qual é expectativa.}
+  \fonte{ENGINE\_CONTEXT.md, API SGS e Boletim Focus do Banco Central do Brasil (2026)}
+  \vspace{4mm}
+  \begin{columns}[T, onlytextwidth]
+    \begin{column}{0.58\textwidth}
+      \begin{tabular}{lccc}
+        \rowcolor{amNavy}\color{white}Índice & \color{white}Fonte SGS & \color{white}Início & \color{white}Projeção \\
+        \rowcolor{amTableStripe}IPCA & 433 & 07/1994 & Focus + ETTJ \\
+        IGP-M & 189 & 01/1940 & Focus \\
+        \rowcolor{amTableStripe}IPCA-15 & 7478 & 02/1999 & Focus \\
+        INPC & 188 & 01/1979 & Focus \\
+        \rowcolor{amTableStripe}INCC & 192 & 01/1985 & -- \\
+        SELIC & 4390 & 06/1986 & -- \\
+        \rowcolor{amTableStripe}CDI & 4391 & 06/1986 & -- \\
+      \end{tabular}
+    \end{column}
+    \begin{column}{0.38\textwidth}
+      {\bfseries Como o fator é calculado}\par\vspace{1.5mm}
+      {\bfseries\color{amSignal}factor = \(\prod (1+r_t/100)\)}\par\vspace{1.5mm}
+      \begin{itemize}
+        \item Realizado: produto encadeado das taxas mensais entre as duas datas
+        \item Focus: taxa anual mediana distribuída em taxa mensal composta uniforme
+        \item ETTJ: taxas forward da curva de inflação implícita ANBIMA (NTN-B), só para IPCA
+      \end{itemize}
+      \vspace{4mm}\textcolor{amMist}{\rule{0.92\linewidth}{0.3pt}}\vspace{3mm}
+      {\amcondlightfont\color{amGray}IPCA, IGP-M, IPCA-15 e INPC têm projeção Focus, e o IPCA soma também a opção ETTJ. INCC, SELIC e CDI não projetam: a data final fica limitada ao último dado realizado.}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Recapitulando e como usar a ferramenta}
+  \takeaway{Este deck saiu da pasta do projeto para o PDF final sem reunião de design, e o mesmo caminho está disponível para qualquer dor de dados do time de Capital Strategy.}
+  \vspace{4mm}
+  {\amcondfont\bfseries\color{amSignal}01\quad}A pipeline lê código, documentação e dados e devolve um roteiro estruturado e revisado\par\vspace{2mm}
+  {\amcondfont\bfseries\color{amSignal}02\quad}Cada etapa tem um agente dedicado à qualidade\par\vspace{2mm}
+  {\amcondfont\bfseries\color{amSignal}03\quad}Estudo de caso real do início ao fim
+  \vspace{5mm}
+  \begin{columns}[T, onlytextwidth]
+    \begin{column}{0.55\textwidth}
+      \includegraphics[width=5mm]{decoracao/icones/rocket-navy.pdf}\ {\bfseries Próximos passos}\par\vspace{1.5mm}
+      \begin{itemize}
+        \item Leve para o apresentacao-rapida-am o próximo memo, modelo ou repositório que precisa virar deck
+        \item Acesse a ferramenta em cortex.enpower.com.br/plugins/apresentacao-rapida-am
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.45\textwidth}
+      \begin{center}
+        \qrcode[height=18mm]{https://cortex.enpower.com.br/plugins/apresentacao-rapida-am}\par\vspace{1.5mm}
+        {\amcondlightfont\fontsize{5.6}{7}\selectfont\color{amGray}Criado com apresentacao-rapida-am}
+      \end{center}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\ambackcover
+
+\end{document}
