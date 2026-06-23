@@ -158,9 +158,10 @@ def _render_log_tab() -> None:
 
 def _clear_log() -> None:
     try:
-        from data.update_log import LOG_PATH
-        if LOG_PATH.exists():
-            LOG_PATH.write_text("[]", encoding="utf-8")
+        from data.update_log import FALLBACK_LOG_PATH, LOG_PATH
+        for path in (FALLBACK_LOG_PATH, LOG_PATH):
+            if path.exists():
+                path.write_text("[]", encoding="utf-8")
     except Exception:
         pass
 
