@@ -250,6 +250,21 @@ def get_comparativo_trilhas():
     return REF, c1pub, c2ytd
 
 
+@st.cache_data(show_spinner="Projetando vetor calculadora...")
+def _get_vetor_calculadora(rf, bl4_tuple, bl_user, hz):
+    import numpy as np
+    from wacc_regulatorio.camada3_vetor import projetar_vetor_wacc
+    bl4 = list(bl4_tuple)
+    beta_override = {}
+    for t in range(hz):
+        jan = bl4 + [bl_user] * (t + 1)
+        beta_override[2026 + t] = float(np.mean(jan[-5:]))
+    return projetar_vetor_wacc(
+        horizonte_anos=hz, rf_spot_projetado=rf,
+        beta_override=beta_override, kd_spec="simples", modo="base", verbose=False,
+    )
+
+
 @st.cache_data(show_spinner="Projetando vetor WACC...")
 def get_camada3(horizonte, embi_delta_frozen, kd_spec, rf_spot_proj):
     from wacc_regulatorio.camada3_vetor import projetar_vetor_wacc
@@ -266,11 +281,12 @@ def get_camada3(horizonte, embi_delta_frozen, kd_spec, rf_spot_proj):
 # ──────────────────────────────────────────────────────────────────────────────
 # Abas
 # ──────────────────────────────────────────────────────────────────────────────
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+tab1, tab2, tab3, tab4, tab_calc, tab5 = st.tabs([
     "📋 Validação ANEEL (Camada 1)",
     "📡 WACC Corrente (Camada 2)",
     "📈 Vetor 30 anos (Camada 3)",
     "🔬 Comparativo de Trilhas",
+    "🧮 Calculadora",
     "📖 Metodologia",
 ])
 
@@ -1320,6 +1336,233 @@ with tab4:
     except Exception as e:
         st.error(f"Erro ao calcular comparativo de trilhas: {e}")
         st.exception(e)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB CALC — Calculadora
+# ══════════════════════════════════════════════════════════════════════════════
+with tab_calc:
+    import numpy as _np
+    from wacc_regulatorio.wacc_calc import calcular_wacc as _calcular_wacc
+    from wacc_regulatorio.data.fixtures import load_beta_historico as _load_beta_hist
+
+    st.subheader("Calculadora WACC — Simulador de Parâmetros")
+    st.caption(
+        "Insira novos valores e veja: **instantâneo** (sem suavização das médias) e "
+        "**regulatório** (convergência via médias móveis 5a/10a)"
+    )
+
+    # ── Defaults C1 ────────────────────────────────────────────────────────
+    try:
+        _r1c, _, _ = get_camada1()
+        _RF0c, _ERP0c, _EMBI0c = _r1c.rf, _r1c.erp, _r1c.embi
+        _BL0c, _BU0c = _r1c.beta_l, _r1c.beta_u
+        _KD0c, _EV0c, _T0c, _W0c = _r1c.kd_real_ai, _r1c.ev, _r1c.T, _r1c.wacc_real_antes_impostos
+    except Exception:
+        _RF0c, _ERP0c, _EMBI0c = 0.05138, 0.06848, 0.02765
+        _BL0c, _BU0c = 0.7692, 0.5030
+        _KD0c, _EV0c, _T0c, _W0c = 0.06587, 0.6023, 0.34, 0.12115
+
+    # ── Layout: inputs esquerda, métricas + cascata direita ────────────────
+    col_i, col_o = st.columns([4, 7])
+
+    with col_i:
+        st.markdown("##### Parâmetros")
+        rf_pct_c  = st.slider("Rf spot projetado (%)", 1.0, 12.0, round(_RF0c * 100, 1), 0.1,
+                               key="calc_rf",
+                               help="Taxa NTN-B para todos os anos futuros · entra na janela rolling 10a")
+        erp_pct_c = st.slider("ERP — Prêmio de Risco (%)", 3.0, 12.0, round(_ERP0c * 100, 2), 0.05,
+                               key="calc_erp")
+        bl_c      = st.slider("Beta_l (alavancado)", 0.20, 1.50, round(_BL0c, 3), 0.001,
+                               format="%.3f", key="calc_bl",
+                               help="Converge via média móvel 5a: 4 janelas históricas + valor inserido")
+        _kd_modo_c = st.radio("Modo Kd a.i.", ["Regressão (Kd ~ Rf)", "Manual"],
+                               horizontal=True, key="calc_kd_modo")
+        kd_pct_c  = st.slider("Kd a.i. (%)", 2.0, 15.0, round(_KD0c * 100, 2), 0.05,
+                               disabled=(_kd_modo_c == "Regressão (Kd ~ Rf)"), key="calc_kd")
+        ev_pct_c  = st.slider("E/V — Equity/Ativo (%)", 40.0, 70.0, round(_EV0c * 100, 2), 0.01,
+                               key="calc_ev")
+        hz_c      = st.slider("Horizonte (anos)", 5, 30, 20, 5, key="calc_hz")
+        st.caption("ℹ️ EMBI implícito no beta. ERP congelado no despacho dentro do vetor.")
+
+    # ── Conversão de unidades ─────────────────────────────────────────────
+    rf_c  = rf_pct_c  / 100.0
+    erp_c = erp_pct_c / 100.0
+    ev_c  = ev_pct_c  / 100.0
+    dv_c  = 1.0 - ev_c
+
+    kd_c = (max(0.02, min(0.20, 0.03327 + 0.621 * rf_c))
+            if _kd_modo_c == "Regressão (Kd ~ Rf)" else kd_pct_c / 100.0)
+
+    # ── WACC instantâneo (sem suavização das médias) ──────────────────────
+    _wi = _calcular_wacc(
+        rf=rf_c, erp=erp_c, embi=_EMBI0c,
+        beta_l=bl_c, beta_u=_BU0c,
+        ev=ev_c, dv=dv_c, kd_real_ai=kd_c, T=_T0c,
+    )
+    _wacc_inst = _wi.wacc_real_antes_impostos
+    _d_bp = (_wacc_inst - _W0c) * 10000
+
+    # ── Beta histórico para construir a média móvel 5a no vetor ───────────
+    try:
+        _bl4 = tuple(_load_beta_hist().sort_values("ano").tail(4)["beta_l_brasil"].tolist())
+    except Exception:
+        _bl4 = (_BL0c,) * 4
+
+    # ── Vetor de convergência (cacheado por parâmetros) ───────────────────
+    try:
+        _df_c   = _get_vetor_calculadora(rf_c, _bl4, bl_c, hz_c)
+        _anos_c = [str(p) for p in _df_c.index]
+        _wv     = _df_c["WACC_antes_impostos"].values
+        _wv_eq  = float(_wv[-1])
+        _conv_i = next((i for i, v in enumerate(_wv) if abs(v - _wv_eq) < 0.0005), hz_c)
+        _vec_ok = True
+    except Exception as _ve:
+        st.error(f"Erro ao projetar vetor: {_ve}")
+        _vec_ok = False
+
+    # ── Métricas e cascata (coluna direita) ───────────────────────────────
+    with col_o:
+        mc1, mc2, mc3, mc4 = st.columns(4)
+        mc1.metric("WACC_ai instantâneo", f"{_wacc_inst:.3%}",
+                   delta=f"{_d_bp:+.1f}bp vs C1 pub",
+                   delta_color="normal" if _d_bp < 0 else "inverse")
+        mc2.metric("Δ vs C1 publicado", f"{_d_bp:+.0f}bp", delta_color="off")
+        if _vec_ok:
+            mc3.metric("WACC equilíbrio", f"{_wv_eq:.3%}",
+                       delta=f"{(_wv_eq - _W0c)*10000:+.0f}bp vs C1", delta_color="off")
+            mc4.metric("Anos p/ convergência", f"~{_conv_i}a",
+                       help="|WACC_t − equilíbrio| < 5bp")
+
+        # ── Cascata de contribuições ───────────────────────────────────────
+        st.markdown("##### Cascata — C1 publicado → Calculadora")
+        st.caption(
+            "Efeito isolado de cada parâmetro, mantendo os demais no valor C1. "
+            "Ordem: Rf → ERP → β_l → Kd → E/V."
+        )
+
+        def _ws(**kw):
+            p = dict(rf=_RF0c, erp=_ERP0c, bl=_BL0c, kd=_KD0c, ev=_EV0c)
+            p.update(kw)
+            ev_ = p["ev"]
+            return _calcular_wacc(
+                rf=p["rf"], erp=p["erp"], embi=_EMBI0c,
+                beta_l=p["bl"], beta_u=_BU0c,
+                ev=ev_, dv=1 - ev_, kd_real_ai=p["kd"], T=_T0c,
+            ).wacc_real_antes_impostos
+
+        _s = [
+            _W0c,
+            _ws(rf=rf_c),
+            _ws(rf=rf_c, erp=erp_c),
+            _ws(rf=rf_c, erp=erp_c, bl=bl_c),
+            _ws(rf=rf_c, erp=erp_c, bl=bl_c, kd=kd_c),
+            _ws(rf=rf_c, erp=erp_c, bl=bl_c, kd=kd_c, ev=ev_c),
+        ]
+        _wf_x = ["C1 pub.", "ΔRf", "ΔERP", "ΔBeta_l", "ΔKd_ai", "ΔE/V", "Calc."]
+        _wf_y = [_s[0]] + [_s[i] - _s[i-1] for i in range(1, 6)] + [0]
+        _wf_t = [f"{_s[0]:.2%}"] + [f"{(_s[i]-_s[i-1])*10000:+.0f}bp" for i in range(1,6)] + [f"{_s[-1]:.2%}"]
+
+        _fig_wf = go.Figure(go.Waterfall(
+            orientation="v",
+            measure=["absolute","relative","relative","relative","relative","relative","total"],
+            x=_wf_x, y=[v * 100 for v in _wf_y],
+            connector={"line": {"color": "rgb(63,63,63)"}},
+            increasing={"marker": {"color": "#d62728"}},
+            decreasing={"marker": {"color": "#2ca02c"}},
+            totals={"marker": {"color": "#1f77b4"}},
+            text=_wf_t, textposition="outside",
+        ))
+        _fig_wf.update_layout(
+            height=360, margin=dict(t=20, b=20),
+            yaxis_tickformat=".2f", yaxis_title="WACC a.i. (%)",
+            showlegend=False,
+        )
+        st.plotly_chart(_fig_wf, use_container_width=True)
+
+    # ── Vetor de convergência (largura total) ─────────────────────────────
+    if _vec_ok:
+        st.divider()
+        st.markdown("##### Vetor de convergência regulatória")
+        st.info(
+            "**Ponto de partida (2026):** sempre próximo ao C1 publicado (12,11%) — a janela rolling "
+            "ainda está preenchida com dados históricos. O vetor converge ao equilíbrio à medida que "
+            "os novos valores entram: **β_l em ~5 anos** (média móvel 5a) e **Rf em ~10 anos** "
+            "(média móvel 10a).  \n"
+            "**⭐ laranja** = WACC instantâneo com seus parâmetros, sem suavização regulatória.",
+            icon="ℹ️",
+        )
+
+        _fig_v = go.Figure()
+
+        # Linha do vetor calculadora
+        _fig_v.add_trace(go.Scatter(
+            x=_anos_c, y=_wv * 100, mode="lines+markers",
+            name="Vetor calculadora",
+            line=dict(color="#1f77b4", width=2.5), marker=dict(size=5),
+            hovertemplate="%{x}: %{y:.2f}%<extra>Vetor</extra>",
+        ))
+
+        # Linha de referência C1 publicado
+        _fig_v.add_hline(
+            y=_W0c * 100, line_dash="dash", line_color="gray",
+            annotation_text=f"C1 publicado ({_W0c:.3%})",
+            annotation_position="top right",
+        )
+
+        # Ponto instantâneo (antes da suavização)
+        _fig_v.add_trace(go.Scatter(
+            x=[_anos_c[0]], y=[_wacc_inst * 100], mode="markers",
+            name=f"Instantâneo ({_wacc_inst:.2%})",
+            marker=dict(color="#ff7f0e", size=16, symbol="star"),
+            hovertemplate=f"WACC instantâneo: {_wacc_inst:.3%}<extra></extra>",
+        ))
+
+        # Linhas de convergência
+        _ib = min(4, len(_anos_c) - 1)
+        _ir = min(10, len(_anos_c) - 1)
+        _fig_v.add_vline(x=_anos_c[_ib], line_dash="dot", line_color="#9467bd",
+                         annotation_text="β converge (~5a)", annotation_position="top left")
+        if _ir < len(_anos_c):
+            _fig_v.add_vline(x=_anos_c[_ir], line_dash="dot", line_color="#8c564b",
+                             annotation_text="Rf converge (~10a)", annotation_position="top left")
+
+        # Anotação de equilíbrio
+        _fig_v.add_annotation(
+            x=_anos_c[-1], y=_wv_eq * 100,
+            text=f"Equilíbrio: {_wv_eq:.2%}",
+            showarrow=True, arrowhead=2, arrowcolor="#1f77b4",
+            font=dict(color="#1f77b4", size=11), ax=-70, ay=-30,
+        )
+
+        _fig_v.update_layout(
+            height=440, margin=dict(t=40, b=20),
+            yaxis_ticksuffix="%", yaxis_title="WACC a.i. (%)",
+            legend=dict(orientation="h", y=1.05),
+            hovermode="x unified",
+        )
+        st.plotly_chart(_fig_v, use_container_width=True)
+
+        # Tabela do vetor
+        with st.expander("Tabela do vetor", expanded=False):
+            _df_disp = _df_c.reset_index(drop=True).copy()
+            _df_disp.insert(0, "Ano", _anos_c)
+            for _c in ["Rf", "ERP", "Ke_real_di", "Kd_real_ai",
+                        "WACC_depois_impostos", "WACC_antes_impostos"]:
+                if _c in _df_disp.columns:
+                    _df_disp[_c] = _df_disp[_c].map("{:.4%}".format)
+            if "Beta_l" in _df_disp.columns:
+                _df_disp["Beta_l"] = _df_disp["Beta_l"].map("{:.4f}".format)
+            _show = [c for c in ["Ano", "Rf", "Beta_l", "Ke_real_di", "Kd_real_ai",
+                                   "WACC_depois_impostos", "WACC_antes_impostos"]
+                     if c in _df_disp.columns]
+            st.dataframe(_df_disp[_show], hide_index=True, use_container_width=True)
+
+        st.download_button(
+            "⬇ Download vetor CSV",
+            data=_df_c.reset_index().to_csv(index=False, sep=";", decimal=",").encode("utf-8-sig"),
+            file_name="wacc_calculadora_vetor.csv", mime="text/csv",
+        )
+
 
 with tab5:
     st.subheader("Metodologia — Despacho ANEEL 675/2026")
