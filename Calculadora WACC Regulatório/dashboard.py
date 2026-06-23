@@ -1517,14 +1517,23 @@ with tab_calc:
             hovertemplate=f"WACC instantâneo: {_wacc_inst:.3%}<extra></extra>",
         ))
 
-        # Linhas de convergência
+        # Linhas de convergência (add_shape para eixo categórico)
         _ib = min(4, len(_anos_c) - 1)
         _ir = min(10, len(_anos_c) - 1)
-        _fig_v.add_vline(x=_anos_c[_ib], line_dash="dot", line_color="#9467bd",
-                         annotation_text="β converge (~5a)", annotation_position="top left")
-        if _ir < len(_anos_c):
-            _fig_v.add_vline(x=_anos_c[_ir], line_dash="dot", line_color="#8c564b",
-                             annotation_text="Rf converge (~10a)", annotation_position="top left")
+        for _xi, _cor, _lbl in [
+            (_ib, "#9467bd", "β converge (~5a)"),
+            (_ir if _ir < len(_anos_c) else None, "#8c564b", "Rf converge (~10a)"),
+        ]:
+            if _xi is None:
+                continue
+            _fig_v.add_shape(type="line",
+                x0=_anos_c[_xi], x1=_anos_c[_xi], y0=0, y1=1,
+                xref="x", yref="paper",
+                line=dict(dash="dot", color=_cor, width=1.2))
+            _fig_v.add_annotation(
+                x=_anos_c[_xi], y=0.97, xref="x", yref="paper",
+                text=_lbl, showarrow=False,
+                font=dict(color=_cor, size=10), xanchor="left")
 
         # Anotação de equilíbrio
         _fig_v.add_annotation(
