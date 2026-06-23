@@ -3,12 +3,18 @@ Sistema de log de atualizações dos dados.
 Persiste um arquivo JSON com o histórico de fetches e novos dados detectados.
 """
 import json
+import os
 from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
 
 LOG_PATH = Path(__file__).parent / "update_log.json"
+FALLBACK_LOG_PATH = (
+    Path(os.environ.get("LOCALAPPDATA", Path.home()))
+    / "CalculadoraMacroeconomica"
+    / "update_log.json"
+)
 
 
 def append_event(
@@ -98,14 +104,22 @@ def _label(ev: dict) -> str:
 
 
 def _load() -> list[dict]:
-    if not LOG_PATH.exists():
-        return []
-    try:
-        return json.loads(LOG_PATH.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
-        return []
+    for path in (LOG_PATH, FALLBACK_LOG_PATH):
+        if not path.exists():
+            continue
+        try:
+            return json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            continue
+    return []
 
 
 def _save(events: list[dict]) -> None:
-    LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    LOG_PATH.write_text(json.dumps(events, ensure_ascii=False, indent=2), encoding="utf-8")
+    payload = json.dumps(events, ensure_ascii=False, indent=2)
+    for path in (FALLBACK_LOG_PATH, LOG_PATH):
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(payload, encoding="utf-8")
+            return
+        except PermissionError:
+            continue

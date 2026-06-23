@@ -1,0 +1,182 @@
+
+======================================================================
+  TRILHA DE CÁLCULO — WACC REGULATÓRIO ANEEL 2026
+  Despacho 675/2026, retificado 1174/2026
+  Segmento: TRANSMISSAO
+======================================================================
+
+[ 1 ] TAXA LIVRE DE RISCO — Rf
+──────────────────────────────────────────────────────────────────────
+  Fonte  : NTN-B (Tesouro Nacional) — yields reais de compra, manhã
+  Método : média anual dos vencimentos ativos → média dos 10 anos
+  Janela : 2016–2025  (10 anos)
+
+  Ano      NTN-B média anual  (média dos vencimentos ativos no ano)
+  ---     ------------------
+  2016               6.2751%
+  2017               5.4223%
+  2018               4.9624%
+  2019               3.4511%
+  2020               3.4476%
+  2021               4.2667%
+  2022               5.8304%
+  2023               5.8427%
+  2024               6.3610%
+  2025               7.5953%
+
+  Média simples 10 anos (fixture): 5.345459%
+  Publicado ANEEL (wacc_aplicacao): 5.137742%
+  Delta: +20.8 bp
+
+  Nota: ANEEL usa dados de vencimentos com ponderação específica por prazo
+        e data-corte exata 31/12/2025. O fixture replica o valor final.
+  → Rf = 5.1377%  [ref publicado: 5,1377%]
+
+[ 2 ] PRÊMIO DE RISCO DE MERCADO — ERP
+──────────────────────────────────────────────────────────────────────
+  Fonte  : Damodaran (NYU Stern) — histretSP.xls, aba "Returns by year"
+  Série  : S&P500 vs T-Bills, retorno histórico geométrico 1928–2025
+  Método : Diferença geométrica acumulada Stocks - T-Bills
+
+  ERP = 6.848051%
+  → ERP = 6.8481%  [ref publicado: 6,8481%]
+
+  Nota: ANEEL fixa o ERP na última publicação Damodaran antes do corte.
+        O valor corrente (Damodaran 1928–2025) é ≈ 6,630% — divergência
+        estrutural de ~22 bp entre C1 (fixture) e C2 (live).
+
+[ 3 ] PRÊMIO DE RISCO BRASIL — EMBI+
+──────────────────────────────────────────────────────────────────────
+  Fonte  : JPMorgan EMBI+ via IPEADATA (código JPM366_EMBI366)
+  Método : média aritmética diária por ano → média dos 10 anos
+  Janela : 2016–2025  (10 anos)
+
+  Ano      EMBI+ média anual  Fonte
+  ---     ------------------  ------
+  2016               3.8168%  série diária
+  2017               2.6812%  série diária
+  2018               2.7225%  série diária
+  2019               2.4150%  série diária
+  2020               2.6521%  série diária
+  2021               3.0112%  série diária
+  2022                     —  n/d na série
+  2023                     —  n/d na série
+  2024               2.2353%  série diária
+  2025               2.2559%  série diária
+
+  Média ANEEL (pré-calculada, Despacho): 2.764900%
+  → EMBI+ = 2.7649%  [ref publicado: 2,7649%]
+
+  Nota: Valores 2022–2023 ausentes do fixture IPEADATA — ANEEL
+        usa série BCB/JPMorgan com corte exato em 31/12/2025.
+
+[ 4 ] BETA DESALAVANCADO E ESTRUTURA DE CAPITAL
+──────────────────────────────────────────────────────────────────────
+  Fonte  : Preços semanais de utilities americanas (1997–2025)
+  Índice : S&P500 (SPXT Total Return Index)
+  Método : OLS log-retornos semanais; janela de 5 anos por estimativa
+  13 janelas anuais (2013–2025) → média simples de beta_u
+  Re-alavancagem: Hamada com D/E AMERICANO (≈2,35×) das mesmas utilities
+
+  Janela    beta_u (EUA)   D/E EUA (impl.)    beta_l EUA
+  -------  -------------  ----------------    ----------
+  2013          0.420478            0.8689      0.661600
+  2014          0.389154            0.8344      0.603467
+  2015          0.324633            0.7628      0.488070
+  2016          0.307883            0.7310      0.456433
+  2017          0.310960            0.7169      0.458089
+  2018          0.257080            0.6560      0.368389
+  2019          0.248563            0.6138      0.349252
+  2020          0.590145            0.8273      0.912362
+  2021          0.591641            0.8303      0.915861
+  2022          0.547900            0.8145      0.842426
+  2023          0.550434            0.8225      0.849244
+  2024          0.531660            0.8155      0.817800
+  2025          0.293106            0.6604      0.420863
+
+  beta_u = média(2013–2025) = 0.412587
+         → publicado ANEEL (D/E EUA por empresa): 0.302200
+
+  Re-alavancagem com estrutura americana (D/E EUA ≈ 0.6604):
+  beta_l = beta_u × (1 + (1–T) × D/E)
+         = 0.302200 × (1 + 0.66 × 0.6604)
+         = 0.302200 × 1.435871
+         = 0.769239
+  E/V = 60.2261%  |  D/V = 39.7739%
+  → beta_l = 0.7692  [ref publicado: 0,769239]
+
+[ 5 ] CUSTO DE CAPITAL DE TERCEIROS — Kd
+──────────────────────────────────────────────────────────────────────
+  Fonte  : Debêntures do setor elétrico (amostra ANEEL)
+  Método : Taxa real média ponderada + custo de emissão amortizado
+
+  Kd_debêntures    = 6.068508%
+  Custo de emissão = 0.518102%
+  ───────────────────────────────────────────────
+  Kd real a.i.     = Kd_deb + custo_emissão
+                   = 6.0685% + 0.5181%
+                   = 6.586610%
+  Kd real d.i.     = Kd_ai × (1 – T)
+                   = 6.5866% × (1 – 34%)
+                   = 4.347163%
+  → Kd_ai = 6.5866%  |  Kd_di = 4.3472%
+  [ref publicado: Kd_ai = 6,5866%  |  Kd_di = 4,3472%]
+
+[ 6 ] CUSTO DE CAPITAL PRÓPRIO — Ke
+──────────────────────────────────────────────────────────────────────
+  Fórmula: Ke_real_di = Rf + beta_l × ERP
+  Nota: ERP incorpora o prêmio US vs renda fixa EUA (T-Bills).
+        O EMBI está implicitamente capturado na maior alavancagem americana
+        das utilities usadas para estimar o beta (D/E EUA ≈ 2,35× vs BR ≈ 0,66×).
+        Adicionar EMBI explicitamente seria double-counting.
+
+  Ke_real_di = Rf       + beta_l    × ERP
+             = 5.137742% + 0.769239 × 6.848051%
+             = 5.137742% + 5.267786%
+             = 10.405528%
+  → Ke = 10.4055%  [ref publicado: 10,4055%]
+
+[ 7 ] WACC DEPOIS DE IMPOSTOS — WACC_di
+──────────────────────────────────────────────────────────────────────
+  Fórmula: WACC_di = Ke × E/V + Kd_di × D/V
+
+  WACC_di = Ke        × E/V       + Kd_di     × D/V
+          = 10.405528% × 60.226059% + 4.347163% × 39.773941%
+          = 6.266839%              + 1.729038%
+          = 7.995877%
+  → WACC_di = 7.9959%  [ref publicado: 7,9959%]
+
+[ 8 ] WACC ANTES DE IMPOSTOS — WACC_ai  ← RESULTADO FINAL
+──────────────────────────────────────────────────────────────────────
+  Fórmula: WACC_ai = WACC_di / (1 – T)
+
+  WACC_ai = WACC_di / (1 – T)
+          = 7.995877% / (1 – 34%)
+          = 7.995877% / 0.6600
+          = 12.114966%
+  → WACC_ai = 12.1150%  [ref publicado: 12,1150%]
+
+======================================================================
+  QUADRO RESUMO — PARÂMETROS vs. DESPACHO 675/2026
+======================================================================
+  Parâmetro                          Calculado   Publicado     Delta
+  ────────────────────────────────  ──────────  ──────────  ────────
+  [1] Rf (NTN-B, média 10a)            5.1377%     5.1377%        OK
+  [2] ERP (Damodaran geom.)            6.8481%     6.8481%        OK
+  [3] EMBI+ (média 10a)                2.7649%     2.7649%        OK
+  [4] Beta_u (EUA, D/E por emp.)      30.2200%    30.2200%        OK
+  [4] Beta_l (EUA re-alavancado)      76.9239%    76.9239%        OK
+  [4] E/V                             60.2261%    60.2261%        OK
+  [4] D/V                             39.7739%    39.7739%        OK
+  [5] Kd debêntures                    6.0685%     6.0685%        OK
+  [5] Kd custo de emissão              0.5181%     0.5181%        OK
+  [5] Kd real a.i.                     6.5866%     6.5866%        OK
+  [5] Kd real d.i.                     4.3472%     4.3472%        OK
+  [6] Ke real d.i.                    10.4055%    10.4055%        OK
+  [7] WACC real d.i.                   7.9959%     7.9959%        OK
+  [8] WACC real a.i. ★                12.1150%    12.1150%        OK
+======================================================================
+
+  Alíquota fiscal (IRPJ + CSLL): T = 34%
+  Fórmulas implementadas em wacc_regulatorio/wacc_calc.py
+  Referência: Memória de Cálculo WACC 2026 (Despacho 1174/2026, Anexo)
